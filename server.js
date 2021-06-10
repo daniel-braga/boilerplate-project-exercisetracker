@@ -4,7 +4,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 require('dotenv').config()
 
-const UserTrack = require('./app.js').UserTrackModel
+const User = require('./app.js').UserModel
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cors())
@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
 const createUser = require('./app.js').createAndSaveUser
 app.post('/api/users', (req, res, next) => {
-  UserTrack.findOne({username: req.body.username}, (error, user) => {
+  User.findOne({username: req.body.username}, (error, user) => {
     if (error) {
       return next(error)
     }
@@ -41,37 +41,27 @@ app.get('/api/users', (req, res, next) => {
   });
 })
 
-app.post('/api/users/:_id/exercises', (req, res) => {
-  res.json({
-    "_id": req.params._id,
-    "username": "user1",
-    "description": req.body.description,
-    "duration": req.body.duration,
-    "date": req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
+const createAndSaveLog = require('./app.js').createAndSaveLog
+app.post('/api/users/:_id/exercises', (req, res, next) => {
+  createAndSaveLog(req.params._id, req.body, (error, log) => {
+    if (error) {
+      return next(error)
+    }
+    res.json(log);
   })
 })
 
-app.get('/api/users/:_id/logs', (req, res) => {
+const getLogs = require('./app.js').getLogs
+app.get('/api/users/:_id/logs', (req, res, next) => {
   //req.query.from
   //req.query.to
   //req.query.limit
 
-  res.json({
-    "_id": req.params._id,
-    "username": "user1",
-    "count": 2,
-    "log": [
-      {
-        "description": "biking",
-        "duration": 40,
-        "date": new Date().toDateString()
-      },
-      {
-        "description": "running",
-        "duration": 30,
-        "date": new Date().toDateString()
-      }
-    ]
+  getLogs(req.params._id, req.query, (error, logs) => {
+    if (error) {
+      return next(error)
+    }
+    res.json(logs);
   })
 })
 
